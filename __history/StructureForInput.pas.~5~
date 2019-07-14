@@ -1,0 +1,90 @@
+unit StructureForInput;
+
+interface
+type
+  TDelphiLine = string[255]; // Длина строки в делфи
+  TTextLink = ^TTextSegment;
+
+  TTextSegment = record
+    LineOfFile: TDelphiLine;
+    NextLine: TTextLink;
+  end;
+
+  CLineControler = class
+  private
+    RootOfStructure: TTextLink;
+    Iterator: TTextLink;
+    EndOfStructure: TTextLink;
+
+  public
+    Destructor destroy();
+    Constructor create();
+    Procedure AddNewLine(Element: TDelphiLine);
+    Function GetNexLine(): TDelphiLine;
+//    Function HasNext(): Boolean;
+    Procedure ClearStructure();
+  end;
+
+implementation
+
+Destructor CLineControler.destroy;
+Var
+  I1: TTextLink;
+Begin
+  while RootOfStructure <> nil do
+  Begin
+    I1 := RootOfStructure;
+    RootOfStructure := RootOfStructure^.NextLine;
+    Dispose(I1);
+  End;
+
+End;
+
+Constructor CLineControler.create;
+begin
+  RootOfStructure := nil;
+  Iterator := nil;
+end;
+
+Procedure CLineControler.AddNewLine(Element: TDelphiLine);
+var
+  PlaceForLine: TTextLink;
+Begin
+  New(PlaceForLine);
+  PlaceForLine^.NextLine := nil;
+  if (RootOfStructure = nil) then
+  Begin
+    RootOfStructure := PlaceForLine;
+    Iterator := RootOfStructure;
+  End
+  else
+    EndOfStructure^.NextLine := PlaceForLine;
+
+  EndOfStructure := PlaceForLine;
+
+End;
+
+Function CLineControler.GetNexLine(): TDelphiLine;
+Begin
+  Result := Iterator.LineOfFile;
+  Iterator := Iterator.NextLine;
+
+End;
+
+//Function CLineControler.HasNext(): Boolean;
+//Begin
+//  Result := Iterator <> nil;
+//End;
+//Procedure ClearStructure();
+//Var
+//  I1: TTextLink;
+//Begin
+//  while RootOfStructure <> nil do
+//  Begin
+//    I1 := RootOfStructure;
+//    RootOfStructure := RootOfStructure^.NextLine;
+//    Dispose(I1);
+//  End;
+//
+//End;
+end.

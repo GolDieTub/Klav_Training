@@ -1,0 +1,17 @@
+program Course;
+
+uses
+  Vcl.Forms,
+  Menu in 'Menu.pas' {MenuForm},
+  Training in 'Training.pas' {FormTraining},
+  Stucture in 'Stucture.pas';
+
+{$R *.res}
+
+begin
+  Application.Initialize;
+  Application.MainFormOnTaskbar := True;
+  Application.CreateForm(TMenuForm, MenuForm);
+  Application.CreateForm(TFormTraining, FormTraining);
+  Application.Run;
+end.

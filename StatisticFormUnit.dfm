@@ -1,0 +1,111 @@
+object StatisticForm: TStatisticForm
+  Left = 0
+  Top = 0
+  BorderStyle = bsDialog
+  Caption = #1057#1090#1072#1090#1080#1089#1090#1080#1082#1072
+  ClientHeight = 235
+  ClientWidth = 410
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'Tahoma'
+  Font.Style = []
+  Menu = MainMenu1
+  OldCreateOrder = False
+  Position = poDesktopCenter
+  OnCreate = FormCreate
+  OnKeyDown = FormKeyDown
+  OnShow = FormShow
+  PixelsPerInch = 96
+  TextHeight = 13
+  object pnllSymbolsCaption: TFlowPanel
+    Left = 24
+    Top = 33
+    Width = 105
+    Height = 41
+    Caption = #1057#1080#1084#1074#1086#1083#1086#1074
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clRed
+    Font.Height = -19
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 0
+  end
+  object pnlTimeCaption: TFlowPanel
+    Left = 24
+    Top = 91
+    Width = 105
+    Height = 41
+    Caption = #1042#1088#1077#1084#1103
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clRed
+    Font.Height = -19
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 1
+  end
+  object pnlMistakeCaption: TFlowPanel
+    Left = 24
+    Top = 152
+    Width = 105
+    Height = 41
+    Caption = #1054#1096#1080#1073#1082#1080
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clRed
+    Font.Height = -19
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 2
+  end
+  object pnlSymbols: TFlowPanel
+    Left = 200
+    Top = 33
+    Width = 185
+    Height = 41
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clRed
+    Font.Height = -19
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 3
+  end
+  object pnlTime: TFlowPanel
+    Left = 200
+    Top = 91
+    Width = 185
+    Height = 41
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clRed
+    Font.Height = -19
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 4
+  end
+  object pnlMistake: TFlowPanel
+    Left = 200
+    Top = 152
+    Width = 185
+    Height = 41
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clRed
+    Font.Height = -19
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 5
+  end
+  object MainMenu1: TMainMenu
+    Left = 160
+    Top = 136
+    object N1: TMenuItem
+      Caption = #1043#1083#1072#1074#1085#1086#1077' '#1084#1077#1085#1102
+      OnClick = N1Click
+    end
+  end
+end

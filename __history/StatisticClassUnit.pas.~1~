@@ -1,0 +1,21 @@
+unit StatisticClassUnit;
+
+interface
+type
+   CStatistic = class
+   Constructor Create();
+      private
+      MisatekeCounter: Integer;
+      CorrectCounter: Integer;
+      TimeCounter: Integer;
+   end;
+implementation
+
+constructor CStatistic.Create();
+begin
+   MisatekeCounter := 0;
+   CorrectCounter := 0;
+   TimeCounter := 0;
+end;
+
+end.

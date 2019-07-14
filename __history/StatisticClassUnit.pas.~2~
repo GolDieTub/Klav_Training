@@ -1,0 +1,29 @@
+unit StatisticClassUnit;
+
+interface
+type
+   CStatistic = class
+   Constructor Create();
+   procedure Update(Correct, Misstake, Time: Integer);
+      private
+      MisatekeCounter: Integer;
+      CorrectCounter: Integer;
+      TimeCounter: Integer;
+   end;
+implementation
+
+constructor CStatistic.Create();
+begin
+   MisatekeCounter := 0;
+   CorrectCounter := 0;
+   TimeCounter := 0;
+end;
+
+procedure CStatistic.Update(Correct, Misstake, Time: Integer);
+begin
+   Inc(MisatekeCounter, Correct);
+   Inc(CorrectCounter, Misstake);
+   Inc(TimeCounter, Time);
+end;
+
+end.

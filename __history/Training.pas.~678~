@@ -1,0 +1,593 @@
+﻿unit Training;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
+  System.Classes, Vcl.Graphics, Menu, StatisticFormUnit, Vcl.Controls,
+  Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
+  Vcl.ExtCtrls, Vcl.Buttons, Vcl.Grids, Vcl.Touch.Keyboard, Vcl.Menus, Stucture,
+  Vcl.Imaging.jpeg;
+
+type
+  TFormTraining = class(TForm)
+    sgGameField: TStringGrid;
+    btShow: TButton;
+    MainMenu: TMainMenu;
+    miExit: TMenuItem;
+    miChooseText: TMenuItem;
+    pnlTime: TFlowPanel;
+    pnlMistake: TFlowPanel;
+    MainTimer: TTimer;
+    OpenFile: TOpenDialog;
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure FormShow(Sender: TObject);
+    procedure btShowKeyPress(Sender: TObject; var Key: Char);
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure sgGameFieldDrawCell(Sender: TObject; ACol, ARow: Integer;
+      Rect: TRect; State: TGridDrawState);
+    procedure miExitClick(Sender: TObject);
+    procedure FormActivate(Sender: TObject);
+    procedure MainTimerTimer(Sender: TObject);
+    procedure UpdateTimePanel();
+    procedure UpdateMistakePanel();
+    procedure StartGame();
+    procedure StopGame();
+    Procedure WriteFromFile();
+    procedure miChooseTextClick(Sender: TObject);
+    procedure FormKeyPress(Sender: TObject; var Key: Char);
+    procedure FormCreate(Sender: TObject);
+    procedure miStatisticClick(Sender: TObject);
+
+  private
+    Time: Integer;
+    MistakeCount: Integer;
+    CorrectCount: Integer;
+    GameState: Boolean;
+    Structure: CLineControler;
+  public
+
+  end;
+
+Type
+  TMass = array [1 .. 3] of Integer;
+
+var
+  FormTraining: TFormTraining;
+  str: string;
+  Statics: array [1 .. 86] of TStaticText;
+  Ind: Integer;
+  Handler: Char;
+  keyColor: TColor;
+  statMass, dinMass: TMass;
+  Mainstring: string;
+  strCount, len, strIndex, colPointer: Integer;
+  Counter: Integer;
+  Structure: CLineControler;
+
+implementation
+
+{$R *.dfm}
+
+procedure CreateKey();
+const
+  Left: array [1 .. 5] of Integer = (0, 88, 104, 76, 76);
+  Borders: array [1 .. 5] of Integer = (13, 12, 12, 11, 10);
+  Coordinates: array [1 .. 56] of Integer = (823, 230, 77, 60, 0, 230, 77, 60,
+    736, 230, 113, 60, 256, 290, 300, 60, 0, 110, 88, 60, 780, 50, 120, 60, 0,
+    170, 105, 60, 807, 110, 93, 60, 823, 170, 77, 60, 825, 111, 72, 118, 0, 290,
+    77, 60, 676, 290, 120, 60, 796, 290, 53, 60, 849, 290, 51, 60);
+  KeyNames: array [1 .. 14] of string = (' ', 'Shift', 'Shift', ' ', 'Tab',
+    'Delete', 'CapsLock', ' ', ' ', 'Enter', 'Cntrl', 'Cntrl', 'Left', 'Down');
+  Ascii: array [1 .. 58] of string[3] = ('Ё', '1', '2', '3', '4', '5', '6', '7',
+    '8', '9', '0', '-/_', '+/=', 'Й', 'Ц', 'У', 'К', 'Е', 'Н', 'Г', 'Ш', 'Щ',
+    'З', 'Х', 'Ъ', 'Ф', 'Ы', 'В', 'А', 'П', 'Р', 'О', 'Л', 'Д', 'Ж', 'Э', 'Ё',
+    '/', 'Я', 'Ч', 'С', 'М', 'И', 'Т', 'Ь', 'Б', 'Ю', './,', 'fn', 'win', 'alt',
+    '', '', '', '', '', 'alt', 'win');
+var
+  i, j, Top, LeftB, n: Integer;
+begin
+  Top := 200;
+  n := 1;
+  for i := 1 to 5 do
+  begin
+    LeftB := Left[i] + 80;
+    for j := 1 to Borders[i] do
+    begin
+      Statics[n] := TStaticText.Create(FormTraining);
+      Statics[n].Parent := FormTraining;
+      Statics[n].Width := 60;
+      Statics[n].Height := 60;
+      Statics[n].Left := LeftB;
+      Statics[n].Top := Top;
+      Statics[n].BorderStyle := sbsSingle;
+      Statics[n].AutoSize := False;
+      Statics[n].Caption := String(Ascii[n]);
+      Statics[n].Font.Size := 10;
+      LeftB := LeftB + 60;
+      inc(n);
+    end;
+    Top := Top + 60;
+  end;
+  j := 1;
+  for i := 1 to 14 do
+  begin
+    Statics[n] := TStaticText.Create(FormTraining);
+    Statics[n].Parent := FormTraining;
+    Statics[n].Left := Coordinates[j] + 80;
+    Statics[n].Top := Coordinates[j + 1] + 150;
+    Statics[n].Width := Coordinates[j + 2];
+    Statics[n].Height := Coordinates[j + 3];
+    if i = 10 then
+      Statics[n].BorderStyle := sbsNone
+    else
+      Statics[n].BorderStyle := sbsSingle;
+    Statics[n].AutoSize := False;
+    Statics[n].Caption := KeyNames[i];
+    Statics[n].Font.Size := 10;
+    inc(n);
+    j := j + 4;
+  end;
+end;
+
+procedure DetectApproprateLetter(var Handler: Char; var Mass: TMass);
+const
+  Detect: array [1 .. 48] of set of byte = ( { [33],[34],[59],
+      [37],[58],[63],[42],[40],[41], } [33], [49, 33], [50], [51], [52], [53],
+    [54], [55, 63], [56], [57], [48], [45, 95], [43, 61], [168, 136],
+    [181, 149], [178, 146], [169, 137], [164, 132], [172, 140], [162, 130],
+    [183, 151], [184, 152], [166, 134], [180, 148], [185, 153], [147, 179],
+    [186, 154], [161, 129], [159, 127], [174, 142], [175, 143], [173, 141],
+    [170, 138], [163, 131], [165, 133], [188, 156], [192, 112], [47, 92],
+    [190, 158], [182, 150], [176, 144], [171, 139], [167, 135], [177, 145],
+    [187, 155], [160, 128], [189, 157], [46, 44]);
+var
+  i: Integer;
+  order: Integer;
+begin
+  order := ord(Handler);
+  if order > 126 then
+    order := order - 913;
+  For i := 1 to 48 do
+  begin
+    if (order in [127 .. 158]) or (order in [44]) or (order in [33]) then
+    begin
+      Mass[1] := 60;
+      Mass[2] := 61;
+    end
+    else
+    begin
+      Mass[1] := 0;
+      Mass[2] := 0;
+    end;
+    if order in Detect[i] then
+      Mass[3] := i;
+  end;
+  if Handler = ' ' then
+    Mass[3] := 62;
+end;
+
+procedure ColorUserKey_Uncorrect(const dinMass: TMass);
+begin
+  if dinMass[3] <> 0 then
+  begin
+    if (dinMass[1] = 0) and (dinMass[2] = 0) then
+      Statics[dinMass[3]].Color := clRed
+    else
+    begin
+      Statics[dinMass[1]].Color := clRed;
+      Statics[dinMass[2]].Color := clRed;
+      Statics[dinMass[3]].Color := clRed;
+    end;
+    Application.ProcessMessages;
+    sleep(100);
+    if (dinMass[3] = statMass[3]) and (dinMass[1] = 0) then
+      Statics[dinMass[3]].Color := clGreen
+    else
+    begin
+      if (dinMass[3] = statMass[3]) and (statMass[1] = 0) and (dinMass[1] <> 0)
+      then
+      begin
+        Statics[dinMass[3]].Color := clGreen;
+        Statics[dinMass[1]].Color := clBtnFace;
+        Statics[dinMass[2]].Color := clBtnFace;
+      end
+      else
+      begin
+        if (dinMass[1] = statMass[1]) and (statMass[1] <> 0) then
+        begin
+          Statics[dinMass[3]].Color := clBtnFace;
+          Statics[dinMass[1]].Color := clGreen;
+          Statics[dinMass[2]].Color := clGreen;
+        end
+        else
+        begin
+          if (dinMass[1] = 0) then
+            Statics[dinMass[3]].Color := clBtnFace
+          else
+          begin
+            Statics[dinMass[1]].Color := clBtnFace;
+            Statics[dinMass[2]].Color := clBtnFace;
+            Statics[dinMass[3]].Color := clBtnFace;
+          end;
+        end;
+      end;
+    end;
+  end;
+end;
+
+procedure ColorUserKey_Correct(var dinMass, statMass: TMass);
+begin
+  if statMass[1] = 0 then
+    Statics[statMass[3]].Color := clBtnFace
+  else
+  begin
+    Statics[statMass[1]].Color := clBtnFace;
+    Statics[statMass[2]].Color := clBtnFace;
+    Statics[statMass[3]].Color := clBtnFace;
+  end;
+  inc(Ind);
+  DetectApproprateLetter(str[Ind], statMass);
+  if statMass[1] = 0 then
+    Statics[statMass[3]].Color := clGreen
+  else
+  begin
+    Statics[statMass[1]].Color := clGreen;
+    Statics[statMass[2]].Color := clGreen;
+    Statics[statMass[3]].Color := clGreen;
+  end;
+end;
+
+procedure TFormTraining.StartGame();
+begin
+  CorrectCount := 0;
+  GameState := True;
+  MistakeCount := 0;
+  Time := 0;
+  MainTimer.Enabled := True;
+  UpdateTimePanel();
+  UpdateMistakePanel();
+end;
+
+procedure TFormTraining.StopGame();
+begin
+  GameState := False;
+  MainTimer.Enabled := False;
+  StatisticForm.Statistic.Update(CorrectCount, MistakeCount, Time);
+end;
+
+procedure TFormTraining.UpdateMistakePanel();
+begin
+  pnlMistake.Caption := IntToStr(MistakeCount);
+end;
+
+procedure TFormTraining.UpdateTimePanel;
+var
+  TimeString: String;
+begin
+  TimeString := '';
+
+  if (Time div 60 < 10) then
+  begin
+    TimeString := TimeString + '0';
+  end;
+  TimeString := TimeString + IntToStr(Time div 60);
+
+  TimeString := TimeString + ':';
+
+  if (Time mod 60 < 10) then
+  begin
+    TimeString := TimeString + '0';
+  end;
+  TimeString := TimeString + IntToStr(Time mod 60);
+
+  pnlTime.Caption := TimeString;
+end;
+
+procedure TFormTraining.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  if (GameState) then
+  begin
+    StopGame();
+  end;
+  MenuForm.Show;
+end;
+
+procedure TFormTraining.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if (not GameState) then
+  begin
+    StartGame();
+  end;
+  if Key = vk_Escape then
+  Begin
+    if (GameState) then
+    begin
+      StopGame();
+    end;
+    close;
+  End;
+end;
+
+procedure TFormTraining.FormKeyPress(Sender: TObject; var Key: Char);
+begin
+  DetectApproprateLetter(Key, dinMass);
+  ColorUserKey_Uncorrect(dinMass);
+
+  if Key = str[Ind] then
+    ColorUserKey_Correct(dinMass, statMass);
+end;
+
+procedure TFormTraining.FormShow(Sender: TObject);
+Var
+  i: Integer;
+begin
+  GameState := False;
+  Width := 1070;
+  Height := 700;
+
+  With btShow do
+  Begin
+    Left := (self.ClientWidth - Width) div 2;
+  End;
+
+  with sgGameField do
+  begin
+    Top := btShow.Top + btShow.Height + 25;
+    colcount := 24;
+    Left := 35;
+    for i := 0 to colcount - 1 do
+      ColWidths[i] := 40;
+    Width := colcount * (ColWidths[0] + (borderWidth * 2) + 2) - 23;
+    Height := RowHeights[0];
+  end;
+
+  With pnlMistake do
+  Begin
+    Top := 600;
+    Left := 35;
+  End;
+
+  With pnlTime do
+  Begin
+    Top := 600;
+    Left := 840;
+  End;
+end;
+
+procedure TFormTraining.MainTimerTimer(Sender: TObject);
+begin
+  inc(Time);
+  UpdateTimePanel();
+end;
+
+procedure TFormTraining.miChooseTextClick(Sender: TObject);
+Var
+  i: Integer;
+begin
+  WriteFromFile();
+end;
+
+procedure TFormTraining.miExitClick(Sender: TObject);
+begin
+  close;
+end;
+
+procedure TFormTraining.miStatisticClick(Sender: TObject);
+begin
+  StatisticForm.ShowModal;
+end;
+
+procedure TFormTraining.sgGameFieldDrawCell(Sender: TObject;
+  ACol, ARow: Integer; Rect: TRect; State: TGridDrawState);
+begin
+  if (ACol >= 0) and (ACol <= 11) then
+  begin
+    sgGameField.Canvas.Brush.Color := clGray;
+    sgGameField.Canvas.FillRect(Rect);
+    sgGameField.Canvas.Font.Color := clBlack;
+    sgGameField.Canvas.TextOut(Rect.Left, Rect.Top,
+      sgGameField.Cells[ACol, ARow]);
+  end;
+end;
+
+procedure ShowText();
+var
+  i, F: Integer;
+begin
+  F := strIndex;
+  for i := colPointer to 23 do
+  begin
+    FormTraining.sgGameField.Cells[i, 0] := str[F];
+    inc(F);
+  end;
+end;
+
+procedure Remove;
+begin
+  dec(colPointer);
+  if colPointer < 0 then
+  begin
+    colPointer := 0;
+    inc(strIndex);
+  end;
+  inc(strCount);
+  ShowText;
+end;
+
+procedure TFormTraining.FormActivate(Sender: TObject);
+var
+  i: Integer;
+begin
+
+  FormTraining.sgGameField.rows[0].Clear;
+  str := Mainstring;
+  Counter := 0;
+  strCount := 12;
+  colPointer := 12;
+  strIndex := 1;
+  len := length(str);
+  insert(#0#0#0#0#0#0#0#0#0#0#0, str, len + 1);
+  Ind := 1;
+  keyColor := clGreen;
+  DetectApproprateLetter(str[Ind], statMass);
+  if statMass[1] = 0 then
+    Statics[statMass[3]].Color := clLime
+  else
+  Begin
+    Statics[statMass[1]].Color := clLime;
+    Statics[statMass[2]].Color := clLime;
+    Statics[statMass[3]].Color := clLime;
+  End;
+  ShowText;
+end;
+
+procedure TFormTraining.FormCreate(Sender: TObject);
+begin
+  CreateKey;
+  Mainstring := 'Мой дядя самых честных правил, Когда не в шутку занемог,' +
+    'Он уважать себя заставил И лучше выдумать не   мог.';
+  Structure := CLineControler.Create;
+
+end;
+
+procedure TFormTraining.btShowKeyPress(Sender: TObject; var Key: Char);
+Var
+  i: Integer;
+begin
+  // btShow.Font.Color := clRed;
+  case Key of
+    'A' .. 'Z':
+      ;
+    'a' .. 'z':
+      ;
+    'А' .. 'Я':
+      ;
+    'а' .. 'я':
+      ;
+    '.':
+      ;
+    ',':
+      ;
+    '(':
+      ;
+    ')':
+      ;
+    ';':
+      ;
+    ' ':
+      ;
+    '0' .. '9':
+      ;
+    '!':
+      ;
+  else
+    Key := #0;
+  end;
+  btShow.Caption := Key;
+  if GameState then
+  begin
+    DetectApproprateLetter(Key, dinMass);
+    ColorUserKey_Uncorrect(dinMass);
+    if Key = #0 then
+      Key := #47;
+    if str[Ind] = '\' then
+      Key := #92;
+    if Key = str[Ind] then
+      ColorUserKey_Correct(dinMass, statMass);
+
+    if Key = str[strCount - 11] then
+    begin
+      inc(Counter);
+      Remove;
+      inc(CorrectCount);
+    end
+    else
+    begin
+      inc(MistakeCount);
+      UpdateMistakePanel();
+    end;
+  end;
+  if len = Counter then
+  Begin
+    StopGame();
+
+    ShowMessage('Поздравляю, ты дошел до самого конца!');
+    for i := 0 to 23 do
+      sgGameField.Cells[i, 0] := #0;
+    inc(Counter);
+
+    // метод вывод формы переиграть, сменить текст, и тд
+  End;
+end;
+
+Procedure TFormTraining.WriteFromFile();
+const
+  FileError = 'Файл повреждён или недоступен для чтения!';
+Var
+  FileName: String;
+  StructureFile: File of TDelphiLine;
+  temp: TDelphiLine;
+  t1, Mainstring: string;
+  i: Integer;
+  flag: Boolean;
+Begin
+  flag := True;
+  if (OpenFile.Execute) and (flag) then
+  begin
+    FileName := OpenFile.FileName;
+    try
+      AssignFile(StructureFile, FileName);
+      Reset(StructureFile);
+      Structure.ClearStructure;
+      while (not EOF(StructureFile)) do
+      begin
+        Read(StructureFile, temp);
+        Structure.AddNewLine(temp);
+      end;
+      CloseFile(StructureFile);
+    except
+      MessageDlg(FileError, mtError, [mbOk], 0);
+    end;
+    flag := False;
+  end;
+  if not(flag) then
+  Begin
+    while Structure.HasNext do
+    Begin
+      t1 := Structure.GetNextLine;
+      Mainstring := Mainstring + t1;
+      trim(Mainstring);
+    End;
+
+    inc(Counter);
+
+    str := Mainstring;
+    DetectApproprateLetter(str[1], dinMass);
+    Counter := 0;
+    strCount := 12;
+    colPointer := 12;
+    strIndex := 1;
+    len := length(str);
+    Ind := 1;
+    insert(#0#0#0#0#0#0#0#0#0#0#0, str, len + 1);
+    for i := 1 to 72 do
+      Statics[i].Color := clBtnFace;
+    FormTraining.sgGameField.rows[0].Clear;
+    DetectApproprateLetter(str[Ind], statMass);
+    DetectApproprateLetter(str[1], dinMass);
+
+    if statMass[1] = 0 then
+      Statics[statMass[3]].Color := clLime
+    else
+    Begin
+      Statics[statMass[1]].Color := clLime;
+      Statics[statMass[2]].Color := clLime;
+      Statics[statMass[3]].Color := clLime;
+    End;
+    ShowText;
+  End;
+end;
+
+end.
